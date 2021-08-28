@@ -3,11 +3,12 @@ package db
 import (
 	"database/sql"
 	"fmt"
+	"reflect"
+	"strings"
+
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
-	"reflect"
-	"strings"
 )
 
 var DB *sql.DB
