@@ -3,14 +3,11 @@ package db
 import (
 	"database/sql"
 	"fmt"
-	"reflect"
-	"strings"
-	"time"
-
-	_ "github.com/go-sql-driver/mysql"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
+	"reflect"
+	"strings"
 )
 
 var DB *sql.DB
