@@ -105,9 +105,7 @@ func List(table string, result interface{}, clause ...string) error {
 	query := "SELECT data FROM " + table
 
 	if len(clause) > 0 {
-		for _, v := range clause {
-			query = query + " " + v
-		}
+		query = query + " " + strings.Join(clause, " ")
 	}
 	log.Infoln(query)
 	rows, err := DB.Query(query)
@@ -155,7 +153,6 @@ func UpdateTx(tx *sql.Tx, table string, id interface{}, newObj proto.Message) er
 		return err
 	}
 	_, err = tx.Exec("UPDATE "+table+" SET data=CAST(? AS JSON) WHERE data->'$.id'=?", jsonv, id)
-
 	return err
 }
 
