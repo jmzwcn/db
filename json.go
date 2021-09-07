@@ -29,11 +29,7 @@ func checkTable(table string) error {
 	if alreadyCreated {
 		return nil
 	}
-	result := ""
-	if DB.QueryRow("SHOW TABLES LIKE ?", table).Scan(&result); result != "" {
-		return nil
-	}
-	sql := "CREATE TABLE ? (data JSON, id VARCHAR(64) GENERATED ALWAYS AS (data->'$.id') VIRTUAL, INDEX idx (id))"
+	sql := "CREATE TABLE IF NOT EXISTS ? (data JSON, id VARCHAR(64) GENERATED ALWAYS AS (data->'$.id') VIRTUAL, INDEX idx (id))"
 	_, err := DB.Exec(sql, table)
 	return err
 }
