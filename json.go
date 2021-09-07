@@ -25,12 +25,17 @@ func InitDB(db *sql.DB, tables ...string) {
 	alreadyCreated = len(tables) > 0
 }
 
-func checkTable(table string) (sql.Result, error) {
+func checkTable(table string) error {
 	if alreadyCreated {
-		return nil, nil
+		return nil
 	}
-	sql := "CREATE TABLE IF NOT EXISTS " + table + " (data JSON)"
-	return DB.Exec(sql)
+	result := ""
+	if DB.QueryRow("SHOW TABLES LIKE ?", table).Scan(&result); result != "" {
+		return nil
+	}
+	sql := "CREATE TABLE ? (data JSON, id VARCHAR(64) GENERATED ALWAYS AS (data->'$.id') VIRTUAL, INDEX idx (id))"
+	_, err := DB.Exec(sql, table)
+	return err
 }
 
 func Insert(table string, obj proto.Message) error {
