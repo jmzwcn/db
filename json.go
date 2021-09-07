@@ -12,18 +12,25 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-var DB *sql.DB
+var (
+	DB             *sql.DB
+	alreadyCreated = false
+)
 
-func InitDB(db *sql.DB) {
+func InitDB(db *sql.DB, tables ...string) {
 	DB = db
+	for _, v := range tables {
+		checkTable(v)
+	}
+	alreadyCreated = len(tables) > 0
 }
 
-func checkTable(table string) error {
-	sql := "CREATE TABLE IF NOT EXISTS " + table + " (data JSON)"
-	if _, err := DB.Exec(sql); err != nil {
-		return err
+func checkTable(table string) (sql.Result, error) {
+	if alreadyCreated {
+		return nil, nil
 	}
-	return nil
+	sql := "CREATE TABLE IF NOT EXISTS " + table + " (data JSON)"
+	return DB.Exec(sql)
 }
 
 func Insert(table string, obj proto.Message) error {
