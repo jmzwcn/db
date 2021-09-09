@@ -15,6 +15,7 @@ import (
 var (
 	DB             *sql.DB
 	alreadyCreated = false
+	marshaler      = protojson.MarshalOptions{EmitUnpopulated: true}
 )
 
 func InitDB(db *sql.DB, tables ...string) {
@@ -51,7 +52,7 @@ func Insert(table string, obj proto.Message) error {
 
 func InsertTx(tx *sql.Tx, table string, obj proto.Message) (sql.Result, error) {
 	checkTable(table)
-	jsonv, err := protojson.Marshal(obj)
+	jsonv, err := marshaler.Marshal(obj)
 	if err != nil {
 		return nil, err
 	}
@@ -154,7 +155,7 @@ func Update(table string, id interface{}, newObj proto.Message) error {
 }
 
 func UpdateTx(tx *sql.Tx, table string, id interface{}, newObj proto.Message) (sql.Result, error) {
-	jsonv, err := protojson.Marshal(newObj)
+	jsonv, err := marshaler.Marshal(newObj)
 	if err != nil {
 		return nil, err
 	}
