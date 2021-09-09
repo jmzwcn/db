@@ -25,13 +25,12 @@ func InitDB(db *sql.DB, tables ...string) {
 	alreadyCreated = len(tables) > 0
 }
 
-func checkTable(table string) error {
+func checkTable(table string) (sql.Result, error) {
 	if alreadyCreated {
-		return nil
+		return nil, nil
 	}
 	sql := "CREATE TABLE IF NOT EXISTS ? (data JSON, id VARCHAR(64) GENERATED ALWAYS AS (data->'$.id') VIRTUAL, INDEX idx (id))"
-	_, err := DB.Exec(sql, table)
-	return err
+	return DB.Exec(sql, table)
 }
 
 func Insert(table string, obj proto.Message) error {
@@ -39,7 +38,7 @@ func Insert(table string, obj proto.Message) error {
 	if err != nil {
 		return err
 	}
-	if err := InsertTx(tx, table, obj); err != nil {
+	if _, err := InsertTx(tx, table, obj); err != nil {
 		tx.Rollback()
 		return err
 	}
@@ -50,14 +49,13 @@ func Insert(table string, obj proto.Message) error {
 	return nil
 }
 
-func InsertTx(tx *sql.Tx, table string, obj proto.Message) error {
+func InsertTx(tx *sql.Tx, table string, obj proto.Message) (sql.Result, error) {
 	checkTable(table)
 	jsonv, err := protojson.Marshal(obj)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	_, err = tx.Exec("INSERT INTO "+table+"(data) VALUES (CAST(? AS JSON))", jsonv)
-	return err
+	return tx.Exec("INSERT INTO "+table+"(data) VALUES (CAST(? AS JSON))", jsonv)
 }
 
 func InsertIfNotExist(table string, id interface{}, obj proto.Message) error {
@@ -115,7 +113,7 @@ func List(table string, result interface{}, clause ...string) error {
 	if len(clause) > 0 {
 		query = query + " " + strings.Join(clause, " ")
 	}
-	log.Infoln(query)
+	log.Debugln(query)
 	rows, err := DB.Query(query)
 	if err != nil {
 		return err
@@ -143,7 +141,7 @@ func Update(table string, id interface{}, newObj proto.Message) error {
 		return err
 	}
 
-	if err := UpdateTx(tx, table, id, newObj); err != nil {
+	if _, err := UpdateTx(tx, table, id, newObj); err != nil {
 		tx.Rollback()
 		return err
 	}
@@ -155,16 +153,15 @@ func Update(table string, id interface{}, newObj proto.Message) error {
 	return nil
 }
 
-func UpdateTx(tx *sql.Tx, table string, id interface{}, newObj proto.Message) error {
+func UpdateTx(tx *sql.Tx, table string, id interface{}, newObj proto.Message) (sql.Result, error) {
 	jsonv, err := protojson.Marshal(newObj)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	_, err = tx.Exec("UPDATE "+table+" SET data=CAST(? AS JSON) WHERE data->'$.id'=?", jsonv, id)
-	return err
+	return tx.Exec("UPDATE "+table+" SET data=CAST(? AS JSON) WHERE data->'$.id'=?", jsonv, id)
 }
 
-func UpdateKVS(table string, id interface{}, kvs map[string]interface{}) error {
+func UpdateKVS(table string, id interface{}, kvs map[string]interface{}) (sql.Result, error) {
 	var (
 		keys   []string
 		values []interface{}
@@ -174,8 +171,7 @@ func UpdateKVS(table string, id interface{}, kvs map[string]interface{}) error {
 		values = append(values, v)
 	}
 	sql := "UPDATE " + table + " SET data=" + "JSON_SET(data" + strings.Join(keys, "") + ") WHERE data->'$.id'= ?"
-	_, err := DB.Exec(sql, append(values, id)...)
-	return err
+	return DB.Exec(sql, append(values, id)...)
 }
 
 func Delete(table string, id interface{}) error {
@@ -183,7 +179,7 @@ func Delete(table string, id interface{}) error {
 	if err != nil {
 		return err
 	}
-	if err := DeleteTx(tx, table, id); err != nil {
+	if _, err := DeleteTx(tx, table, id); err != nil {
 		tx.Rollback()
 		return err
 	}
@@ -194,7 +190,6 @@ func Delete(table string, id interface{}) error {
 	return nil
 }
 
-func DeleteTx(tx *sql.Tx, table string, id interface{}) error {
-	_, err := tx.Exec("DELETE FROM "+table+" WHERE data->'$.id' = ?", id)
-	return err
+func DeleteTx(tx *sql.Tx, table string, id interface{}) (sql.Result, error) {
+	return tx.Exec("DELETE FROM "+table+" WHERE data->'$.id' = ?", id)
 }
