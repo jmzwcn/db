@@ -26,7 +26,7 @@ func InitDB(db *sql.DB, tables ...string) {
 	}
 }
 
-func InitByURL(dburl string) {
+func Open(dburl string) {
 	var err error
 	for i := 1; i <= 5; i++ {
 		DB, err = sql.Open("mysql", dburl)
