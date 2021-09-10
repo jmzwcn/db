@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+	"time"
 
 	_ "github.com/go-sql-driver/mysql"
 	log "github.com/sirupsen/logrus"
@@ -23,6 +24,22 @@ func InitDB(db *sql.DB, tables ...string) {
 	for _, v := range tables {
 		checkTable(v)
 	}
+}
+
+func InitByURL(dburl string) {
+	var err error
+	for i := 1; i <= 5; i++ {
+		DB, err = sql.Open("mysql", dburl)
+		if err != nil {
+			log.Errorln("Connect failed: ", dburl, err, i)
+			time.Sleep(time.Second * 5)
+			continue
+		} else {
+			break
+		}
+	}
+	log.Debugln("DB init completely: ", dburl)
+	DB.SetMaxIdleConns(0)
 }
 
 func checkTable(table string) (sql.Result, error) {
