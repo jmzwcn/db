@@ -14,7 +14,7 @@ import (
 
 var (
 	DB        *sql.DB
-	created   = make(map[string]bool)
+	checked   = make(map[string]bool)
 	marshaler = protojson.MarshalOptions{EmitUnpopulated: true}
 )
 
@@ -26,10 +26,10 @@ func InitDB(db *sql.DB, tables ...string) {
 }
 
 func checkTable(table string) (sql.Result, error) {
-	if created[table] {
+	if checked[table] {
 		return nil, nil
 	}
-	created[table] = true
+	checked[table] = true
 	sql := "CREATE TABLE IF NOT EXISTS ? (data JSON, id VARCHAR(64) GENERATED ALWAYS AS (data->'$.id') VIRTUAL, INDEX idx (id))"
 	return DB.Exec(sql, table)
 }
