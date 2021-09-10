@@ -6,16 +6,16 @@ import (
 	"testing"
 
 	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 
 func TestCast(t *testing.T) {
 	fmt.Println("beign")
-	var msg proto.Message
-	//msg = &pb.Account{Id: "abc"}
+	//var msg proto.Message
+	msg := wrapperspb.String("abc")
 	a := msg.ProtoReflect().New()
 	aa := proto.Clone(msg)
-	fmt.Println(msg.(proto.Message), a.(protoreflect.Message), aa)
+	fmt.Println(msg, a, aa)
 	t.Error("done")
 }
 
