@@ -13,9 +13,9 @@ import (
 )
 
 var (
-	DB             *sql.DB
-	alreadyCreated = false
-	marshaler      = protojson.MarshalOptions{EmitUnpopulated: true}
+	DB        *sql.DB
+	created   = make(map[string]bool)
+	marshaler = protojson.MarshalOptions{EmitUnpopulated: true}
 )
 
 func InitDB(db *sql.DB, tables ...string) {
@@ -23,13 +23,13 @@ func InitDB(db *sql.DB, tables ...string) {
 	for _, v := range tables {
 		checkTable(v)
 	}
-	alreadyCreated = len(tables) > 0
 }
 
 func checkTable(table string) (sql.Result, error) {
-	if alreadyCreated {
+	if created[table] {
 		return nil, nil
 	}
+	created[table] = true
 	sql := "CREATE TABLE IF NOT EXISTS ? (data JSON, id VARCHAR(64) GENERATED ALWAYS AS (data->'$.id') VIRTUAL, INDEX idx (id))"
 	return DB.Exec(sql, table)
 }
