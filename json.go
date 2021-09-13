@@ -104,7 +104,8 @@ func Get(table string, kvs map[string]interface{}, obj proto.Message) error {
 	)
 	for k, v := range kvs {
 		if k == "$.id" { // use index
-			keys = append(keys, "id='\"?\"'")
+			keys = append(keys, "id=?")
+			v = "\"" + fmt.Sprint(v) + "\""
 		} else {
 			keys = append(keys, "data->'"+k+"'=?")
 		}
