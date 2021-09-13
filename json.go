@@ -26,19 +26,19 @@ func InitDB(db *sql.DB, tables ...string) {
 	}
 }
 
-func Open(dburl string) {
+func Open(dsn string) {
 	var err error
 	for i := 1; i <= 5; i++ {
-		DB, err = sql.Open("mysql", dburl)
+		DB, err = sql.Open("mysql", dsn)
 		if err != nil {
-			log.Errorln("Connect failed: ", dburl, err, i)
+			log.Errorln("Connect failed: ", dsn, err, i)
 			time.Sleep(time.Second * 5)
 			continue
 		} else {
 			break
 		}
 	}
-	log.Debugln("DB init completely: ", dburl)
+	log.Debugln("DB init completely: ", dsn)
 	DB.SetMaxIdleConns(0)
 }
 
@@ -102,8 +102,12 @@ func Get(table string, kvs map[string]interface{}, obj proto.Message) error {
 		keys   []string
 		values []interface{}
 	)
-	for k, v := range kvs { // key should be [json-path], e.g:$.id
-		keys = append(keys, "data->'"+k+"'=?")
+	for k, v := range kvs {
+		if v == "$.id" { // use index
+			keys = append(keys, "id=?")
+		} else {
+			keys = append(keys, "data->'"+k+"'=?")
+		}
 		values = append(values, v)
 	}
 	query := "SELECT data FROM " + table + " WHERE " + strings.Join(keys, " AND ")
