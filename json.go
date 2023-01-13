@@ -130,31 +130,22 @@ func List(table string, result interface{}, clause ...string) error {
 		return fmt.Errorf("result argument must be a slice address")
 	}
 	slicev := resultv.Elem()
-	elemt := slicev.Type().Elem()
-	query := "SELECT data FROM " + table
+	query := "SELECT data FROM " + table + " " + strings.Join(clause, " ")
 
-	if len(clause) > 0 {
-		query = query + " " + strings.Join(clause, " ")
-	}
 	log.Debugln(query)
 	rows, err := DB.Query(query)
 	if err != nil {
 		return err
 	}
 	defer rows.Close()
-	i := 0
 	for rows.Next() {
-		data := ""
-		err := rows.Scan(&data)
-		if err != nil {
+		elemp := reflect.New(slicev.Type().Elem().Elem())
+		if err := rows.Scan(elemp.Interface()); err != nil {
 			return err
 		}
-		elemp := reflect.New(elemt.Elem())
-		protojson.Unmarshal([]byte(data), elemp.Interface().(proto.Message))
 		slicev = reflect.Append(slicev, elemp)
-		i++
 	}
-	resultv.Elem().Set(slicev.Slice(0, i))
+	reflect.ValueOf(result).Elem().Set(slicev)
 	return nil
 }
 
