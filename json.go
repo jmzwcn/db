@@ -111,16 +111,9 @@ func Get(table string, kvs map[string]interface{}, obj proto.Message) error {
 		}
 		values = append(values, v)
 	}
+
 	query := "SELECT data FROM " + table + " WHERE " + strings.Join(keys, " AND ")
-	data := ""
-	if err := DB.QueryRow(query, values...).Scan(&data); err == nil {
-		if err := protojson.Unmarshal([]byte(data), obj); err != nil {
-			return err
-		}
-	} else {
-		return err
-	}
-	return nil
+	return DB.QueryRow(query, values...).Scan(obj)
 }
 
 func List(table string, result interface{}, clause ...string) error {
@@ -130,7 +123,7 @@ func List(table string, result interface{}, clause ...string) error {
 		return fmt.Errorf("result argument must be a slice address")
 	}
 	slicev := resultv.Elem()
-	query := "SELECT data FROM " + table + " " + strings.Join(clause, " ")
+	query := fmt.Sprintf("SELECT data FROM  %s %s", table, strings.Join(clause, " "))
 
 	log.Debugln(query)
 	rows, err := DB.Query(query)
