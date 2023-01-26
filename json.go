@@ -2,6 +2,7 @@ package db
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"reflect"
 	"strings"
@@ -133,9 +134,11 @@ func List(table string, result interface{}, clause ...string) error {
 	defer rows.Close()
 	for rows.Next() {
 		elemp := reflect.New(slicev.Type().Elem().Elem())
-		if err := rows.Scan(elemp.Interface()); err != nil {
+		data := []byte{}
+		if err := rows.Scan(&data); err != nil {
 			return err
 		}
+		json.Unmarshal(data, elemp.Interface())
 		slicev = reflect.Append(slicev, elemp)
 	}
 	reflect.ValueOf(result).Elem().Set(slicev)
