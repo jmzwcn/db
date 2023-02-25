@@ -19,12 +19,12 @@ var (
 	marshaler = protojson.MarshalOptions{EmitUnpopulated: true}
 )
 
-func InitDB(db *sql.DB, tables ...string) {
-	DB = db
-	for _, v := range tables {
-		checkTable(v)
-	}
-}
+// func InitDB(db *sql.DB, tables ...string) {
+// 	DB = db
+// 	for _, v := range tables {
+// 		checkTable(v)
+// 	}
+// }
 
 func Open(dsn string) {
 	var err error
