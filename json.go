@@ -46,8 +46,12 @@ func checkTable(table string) (sql.Result, error) {
 	if checked[table] {
 		return nil, nil
 	}
-	checked[table] = true
-	return DB.Exec(fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s (data JSON, id VARCHAR(64) GENERATED ALWAYS AS (data->'$.id') VIRTUAL, INDEX idx (id))", table))
+
+	result, err := DB.Exec(fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s (data JSON, id VARCHAR(64) GENERATED ALWAYS AS (data->'$.id') VIRTUAL, INDEX idx (id))", table))
+	if err == nil {
+		checked[table] = true
+	}
+	return result, err
 }
 
 func Insert(table string, obj proto.Message) error {
