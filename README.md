@@ -1,1 +1,1 @@
-A automatic protobuf messages to DB entity and DB entity to protobuf messages tools.
+A magic tool of protobuf messages to DB entity && DB entity to protobuf messages.
