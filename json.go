@@ -14,9 +14,10 @@ import (
 )
 
 var (
-	DB        *sql.DB
-	checked   = make(map[string]bool)
-	marshaler = protojson.MarshalOptions{EmitUnpopulated: true}
+	DB          *sql.DB
+	checked     = make(map[string]bool)
+	marshaler   = protojson.MarshalOptions{AllowPartial: true}
+	unmarshaler = protojson.UnmarshalOptions{DiscardUnknown: true, AllowPartial: true}
 )
 
 func Open(dsn string) {
@@ -109,7 +110,11 @@ func Get(table string, kvs map[string]interface{}, obj proto.Message) error {
 	}
 
 	query := "SELECT data FROM " + table + " WHERE " + strings.Join(keys, " AND ")
-	return DB.QueryRow(query, values...).Scan(obj)
+	var data []byte
+	if err := DB.QueryRow(query, values...).Scan(&data); err != nil {
+		return err
+	}
+	return unmarshaler.Unmarshal(data, obj)
 }
 
 func List(table string, result interface{}, clause ...string) error {
@@ -133,7 +138,7 @@ func List(table string, result interface{}, clause ...string) error {
 		if err := rows.Scan(&data); err != nil {
 			return err
 		}
-		protojson.Unmarshal(data, elemp.Interface().(proto.Message))
+		unmarshaler.Unmarshal(data, elemp.Interface().(proto.Message))
 		slicev = reflect.Append(slicev, elemp)
 	}
 	reflect.ValueOf(result).Elem().Set(slicev)
