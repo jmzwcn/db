@@ -41,7 +41,7 @@ func checkTable(table string) (sql.Result, error) {
 		return nil, nil
 	}
 
-	result, err := DB.Exec(fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s (data JSON, id VARCHAR(64) GENERATED ALWAYS AS (data->'$.id') VIRTUAL, INDEX idx (id))", table))
+	result, err := DB.Exec(fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s (data JSON, id VARCHAR(64) GENERATED ALWAYS AS (data->>'$.id') VIRTUAL, INDEX idx (id))", table))
 	if err == nil {
 		checked[table] = true
 	}
@@ -102,7 +102,7 @@ func Get(table string, kvs map[string]interface{}, obj proto.Message) error {
 	for k, v := range kvs {
 		if k == "$.id" { // use index
 			keys = append(keys, "id=?")
-			v = "\"" + fmt.Sprint(v) + "\""
+			v = "" + fmt.Sprint(v) + ""
 		} else {
 			keys = append(keys, "data->'"+k+"'=?")
 		}
