@@ -16,7 +16,7 @@ import (
 var (
 	DB          *sql.DB
 	checked     = make(map[string]bool)
-	marshaler   = protojson.MarshalOptions{AllowPartial: true}
+	marshaler   = protojson.MarshalOptions{AllowPartial: true, UseProtoNames: true}
 	unmarshaler = protojson.UnmarshalOptions{DiscardUnknown: true, AllowPartial: true}
 )
 
