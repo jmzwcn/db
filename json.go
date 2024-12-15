@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+	"sync"
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -15,7 +16,7 @@ import (
 
 var (
 	DB          *sql.DB
-	checked     = make(map[string]bool)
+	checked     = sync.Map{}
 	marshaler   = protojson.MarshalOptions{AllowPartial: true, UseProtoNames: true}
 	unmarshaler = protojson.UnmarshalOptions{DiscardUnknown: true, AllowPartial: true}
 )
@@ -37,15 +38,12 @@ func Open(dsn string) {
 }
 
 func checkTable(table string) (sql.Result, error) {
-	if checked[table] {
+	if _, ok := checked.Load(table); ok {
 		return nil, nil
 	}
 
-	result, err := DB.Exec(fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s (data JSON, id VARCHAR(64) GENERATED ALWAYS AS (data->>'$.id') VIRTUAL, INDEX idx (id))", table))
-	if err == nil {
-		checked[table] = true
-	}
-	return result, err
+	checked.Store(table, true)
+	return DB.Exec(fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s (data JSON, id VARCHAR(64) GENERATED ALWAYS AS (data->>'$.id') VIRTUAL, INDEX idx (id))", table))
 }
 
 func Insert(table string, obj proto.Message) error {
